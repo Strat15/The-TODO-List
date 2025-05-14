@@ -1,3 +1,5 @@
+"""This is a simple checklist list application that uses tkinter and sqlite3."""
+
 from tkinter import *
 from tkinter import messagebox
 import sqlite3
@@ -11,17 +13,23 @@ print(res.fetchall())
 
 
 class TodoApp:
+    """This is the main class of the application."""
+
     def __init__(self, master):
+        """This is the constructor of the class."""
         self.master = master
         self.master.title("The TODO List")
         self.master.geometry("800x500")
         self.master.config(bg="black")
 
-        self.rows = cur.execute("SELECT title, description FROM list").fetchall()
+        self.rows = cur.execute(
+            "SELECT title, description FROM list"
+            ).fetchall()
 
         self.create_widgets()
 
     def create_widgets(self):
+        """This function creates widgets of the application."""
         for row in self.rows:
             frame = Frame(self.master, bg="black")
             frame.pack(anchor=W, padx=20, pady=5)
@@ -44,6 +52,7 @@ class TodoApp:
         self.addtaskbutton.pack(pady=20)
 
     def add_task(self):
+        """This function adds a task to the database."""
         name = self.namebox.get("1.0", END).strip()
         description = self.descbox.get("1.0", END).strip()
         if name and description:
@@ -54,8 +63,9 @@ class TodoApp:
             mainloop()
         else:
             messagebox.showerror("Error", "Please fill in all fields")
-    
+
     def delete_task(self, title):
+        """This function deletes a task from the database."""
         if title:
             cur.execute("DELETE FROM list WHERE title=?", (title,))
             con.commit()
