@@ -2,57 +2,69 @@ from tkinter import *
 from tkinter import messagebox
 import sqlite3
 
-con = sqlite3.connect("./tododata.db")
+con = sqlite3.connect("tododata.db")
 cur = con.cursor()
-cur.execute("CREATE TABLE IF NOT EXISTS list (title TEXT, priority INTEGER, description TEXT)")
-
-cur.execute("INSERT INTO list VALUES('Buy groceries', 1, 'Buy milk, eggs, and bread')")
-cur.execute("INSERT INTO list VALUES('Clean the house', 2, 'Vacuum and dust the living room')")
-cur.execute("INSERT INTO list VALUES('Finish homework', 1, 'Complete math and science assignments')")
-cur.execute("INSERT INTO list VALUES('Go for a walk', 3, 'Walk in the park for 30 minutes')")
+cur.execute("CREATE TABLE IF NOT EXISTS list (title TEXT, description TEXT)")
 
 res = cur.execute("SELECT title FROM list")
 print(res.fetchall())
 
 
-class TodoList:
-    def __init__(self, name, priority, description):
-        self.name = name
-        self.priority = priority
-        self.description = description
+class TodoApp:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("The TODO List")
+        self.master.geometry("800x500")
+        self.master.config(bg="black")
+
+        self.rows = cur.execute("SELECT title, description FROM list").fetchall()
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        for row in self.rows:
+            frame = Frame(self.master, bg="black")
+            frame.pack(anchor=W, padx=20, pady=5)
+
+            tickbox = Checkbutton(frame, text=f"task: {row[0]}, description: {row[1]}", fg="white")
+            tickbox.pack(side=LEFT)
+
+            delete_button = Button(frame, command=lambda title=row[0]: self.delete_task(title), bg="red", text="X")
+            delete_button.pack(side=LEFT, padx=10)
+
+        self.namebox = Text(self.master, height=2, width=30, bg="black", fg="white")
+        self.namebox.pack(pady=20)
+        self.namebox.insert(END, "Enter task name here")
+
+        self.descbox = Text(self.master, height=2, width=30, bg="black", fg="white")
+        self.descbox.pack(pady=20)
+        self.descbox.insert(END, "Enter task description here")
+
+        self.addtaskbutton = Button(self.master, text="Add Task", command=self.add_task, bg="black", fg="white")
+        self.addtaskbutton.pack(pady=20)
 
     def add_task(self):
-        if self.name and self.priority and self.description:
-            cur.execute("INSERT INTO list VALUES(?, ?, ?)", (self.name, self.priority, self.description))
+        name = self.namebox.get("1.0", END).strip()
+        description = self.descbox.get("1.0", END).strip()
+        if name and description:
+            cur.execute("INSERT INTO list VALUES(?, ?)", (name, description))
             con.commit()
             messagebox.showinfo("Success", "Task added successfully")
+            self.master.destroy()
+            mainloop()
         else:
             messagebox.showerror("Error", "Please fill in all fields")
+    
+    def delete_task(self, title):
+        if title:
+            cur.execute("DELETE FROM list WHERE title=?", (title,))
+            con.commit()
+            messagebox.showinfo("Success", "Task deleted successfully")
+            self.master.destroy()
+            mainloop()
+
 
 if __name__ == "__main__":
     root = Tk()
-    root.title("The TODO List")
-    root.geometry("800x500")
-    root.config(bg="black")
-
-    res = cur.execute("SELECT title, description FROM list")
-    rows = res.fetchall()        
-    for row in rows:
-        tickbox = Checkbutton(root, text=f"title: {row[0]}, description: {row[1]}", bg="black", fg="white")
-        tickbox.pack(anchor=W, padx=20, pady=5)
-    
-    namebox = Text(root, height=2, width=30, bg="black", fg="white")
-    namebox.pack(pady=20)
-    namebox.insert(END, "Enter task name here")
-    
-
-    descbox = Text(root, height=2, width=30, bg="black", fg="white")
-    descbox.pack(pady=20)
-    descbox.insert(END, "Enter task description here")
-
-
-    addtaskbutton = Button(root, text="Add Task", bg="black", fg="white", command=lambda: TodoList(namebox.get(), 1, descbox.get()).add_task())
-    addtaskbutton.pack(pady=20)
-
+    app = TodoApp(root)
     root.mainloop()
-
