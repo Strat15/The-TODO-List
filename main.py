@@ -61,8 +61,10 @@ class TodoApp:
             messagebox.showinfo("Success", "Task added successfully")
             self.master.destroy()
             mainloop()
+        if not name or not description:
+            messagebox.showerror("Error", "task name and description cant be empty")
         else:
-            messagebox.showerror("Error", "Please fill in all fields")
+            messagebox.showerror("Error")
 
     def delete_task(self, title):
         """This function deletes a task from the database."""
